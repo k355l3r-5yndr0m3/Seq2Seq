@@ -14,8 +14,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = Seq2SeqTransformer(device=device)
 optimizer = optim.Adadelta(model.parameters())
-dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding, token_limit=1024)
+dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding, token_limit=2**13+2**11)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='sum')
 
 for i in range(10):
-    train_epoch(dataloader, model, optimizer, criterion, on_device=device)
+    train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True)
