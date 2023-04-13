@@ -46,11 +46,13 @@ def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True,
 
 def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optimizer, criterion: callable,
                 print_loss: bool = True, aggregate_over_nbatch: int = 32, return_losses: bool = False,
-                loss_take_arg: bool = False, on_device: torch.device = torch.device('cpu')) -> None | list[float]:
+                loss_take_arg: bool = False, exclaim_each_batch: bool = True, on_device: torch.device = torch.device('cpu')) -> None | list[float]:
     loss_scale_factor = 1.0 / aggregate_over_nbatch if loss_take_arg else 1.0
     loss_aggregate = 0.0
     losses = [] if return_losses else None
     for batch_num, batch in enumerate(dataloader):
+        if exclaim_each_batch:
+            print(f"BATCH:{batch_num+1}/{len(dataloader)}")
         optimizer.zero_grad()
         for src, tgt in batch:
             src = src.to(device=on_device)
