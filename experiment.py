@@ -19,7 +19,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = Seq2SeqTransformer(device=device)
 optimizer = optim.Adadelta(model.parameters())
 dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding, token_limit=2**13+2**11)
-criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='sum')
+criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean')
 
 if load_latest_checkpoint(model, optimizer):
     print("restart from checkpoint.")
