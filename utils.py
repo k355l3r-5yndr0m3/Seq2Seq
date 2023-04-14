@@ -23,10 +23,17 @@ def keep_n_checkpoints(model: nn.Module, optimizer: optim.Optimizer, checkpoints
         mkdir(checkpoints_dir)
     older_checkpoints = [cp for cp in listdir(checkpoints_dir) if fnmatch(cp, "checkpoint-*.pth")]
     newest_idx = max([int(cp.split('-')[1].split('.')[0]) for cp in older_checkpoints]) if len(older_checkpoints) > 0 else None
-    if newest_idx:
+    if newest_idx is not None:
         if len(older_checkpoints) >= keep_n:
             oldest_idx = min([int(cp.split('-')[1].split('.')[0]) for cp in older_checkpoints])
             remove(path.join(checkpoints_dir, f"checkpoint-{oldest_idx}.pth"))
         save_check_point(model, optimizer, save_path=path.join(checkpoints_dir, f"checkpoint-{newest_idx+1}.pth"))
     else:
         save_check_point(model, optimizer, save_path=path.join(checkpoints_dir, "checkpoint-0.pth"))
+
+if __name__ == "__main__":
+    m = nn.Linear(10, 10)
+    o = optim.SGD(m.parameters(), lr=1.0)
+    for i in range(6):
+        keep_n_checkpoints(m, o)
+
