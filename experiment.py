@@ -11,7 +11,7 @@ from utils import keep_n_checkpoints, load_latest_checkpoint
 start = 1
 end = 2
 padding = 3
-epoch_num = 16
+epoch_num = 32
 num_checkpoints = 4
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

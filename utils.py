@@ -6,16 +6,18 @@ from fnmatch import fnmatch
 
 def save_check_point(model: nn.Module, optimizer: optim.Optimizer, save_path: str = "checkpoint.pth"):
     state_dict = {
-        "model": model.state_dict(),
-        "optimizer": optimizer.state_dict()
+        "model": model.state_dict() if model is not None else None,
+        "optimizer": optimizer.state_dict() if optimizer is not None else None,
     }
     torch.save(state_dict, save_path)
 
 
 def load_check_point(model: nn.Module, optimizer: optim.Optimizer, load_path: str = "checkpoint.pth"):
     state_dict = torch.load(load_path)
-    model.load_state_dict(state_dict["model"])
-    optimizer.load_state_dict(state_dict["optimizer"])
+    if model is not None:
+        model.load_state_dict(state_dict["model"])
+    if optimizer is not None:
+        optimizer.load_state_dict(state_dict["optimizer"])
 
 
 def keep_n_checkpoints(model: nn.Module, optimizer: optim.Optimizer, checkpoints_dir: str = "checkpoints/", keep_n: int = 4):

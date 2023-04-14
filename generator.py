@@ -4,7 +4,7 @@ from torch import Tensor, nn
 
 from train import sp_unigram
 from model import Seq2SeqTransformer
-from utils import load_vocab
+from utils import load_vocab, load_latest_checkpoint
 
 def beam_search(model: nn.Module, src_text: str, width: int = 8, keep_score: bool = False,
                 start: int = 1, end: int = 2, pad: int = 3, tokenizer: callable = sp_unigram,
@@ -41,10 +41,13 @@ def beam_search(model: nn.Module, src_text: str, width: int = 8, keep_score: boo
 if __name__ == "__main__":
     vocab = load_vocab("sp_unigram.vocab")
     model = Seq2SeqTransformer()
-    src = "this is a test."
-    res = beam_search(model, src, width=8, temp=0.05)
+    load_latest_checkpoint(model, None)
+
+    src = "Try to translate this sentence ."
+    res = beam_search(model, src, width=64, temp=0.05)
     res = [[vocab[i] for i in s] for s in res]
-    print(*res, sep='\n')
+    with open("translate_test", "w") as f:
+        print(*res, sep='\n', file=f)
 
 
 
