@@ -1,4 +1,3 @@
 #!/bin/sh
-python3.10 experiment.py
-python3.10 generator.py
-sudo poweroff
+python experiment.py
+python generator.py

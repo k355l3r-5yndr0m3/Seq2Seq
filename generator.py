@@ -8,7 +8,7 @@ from model import Seq2SeqTransformer
 from utils import load_vocab, load_latest_checkpoint
 
 from torchtext.functional import to_tensor
-
+from itertools import product
 
 
 def beam_search(model: nn.Module, src: str | Tensor, width: int = 8, return_score: bool = False,
@@ -68,13 +68,21 @@ def contrastive_search(model: nn.Module, embedding: Tensor, src: str | Tensor, k
 
 
 if __name__ == "__main__":
-    vocab = load_vocab("sp_unigram.vocab")
-    model = Seq2SeqTransformer()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = Seq2SeqTransformer(device=device)
     load_latest_checkpoint(model, None)
-
-    src = "Try to translate this sentence ."
-    res = contrastive_search(model, model.tok_emb.weight, src, k=64, temp=0.00)
-    print(res)
+    vocab = load_vocab("sp_unigram.vocab")
+    nalpha = 11
+    alphas: [float] = torch.linspace(0.0, 1.0, nalpha, dtype=torch.float).tolist()
+    test_cases = [
+        "Try to translate this sentence .",
+        "Handl TyPo, ad ther odities.",
+    ]
+    for src, alpha in product(test_cases, alphas):
+        result: Tensor = contrastive_search(model, model.tok_emb.weight, src, device=device, alpha=alpha)
+        result: list[int] = result.tolist()
+        result: list[str] = [vocab[token] for token in result]
+        print(f"alpha={alpha} \"{src}\" -> \"", *result, '"', sep='', end='\n')
 
 
 
