@@ -30,8 +30,8 @@ if load_latest_checkpoint(model, optimizer):
 else:
     print("training from scratch.")
 
-with open("losses_graph", "w") as graph:
+with open("losses_graph", "w", buffering=1) as graph:
     for epoch in range(epoch_num):
-        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, exclaim_each_batch=False)
-        print("Saving checkpoint.")
+        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, write_loss_to=graph)
+        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}\n", file=graph)
         keep_n_checkpoints(model, optimizer, keep_n=num_checkpoints)
