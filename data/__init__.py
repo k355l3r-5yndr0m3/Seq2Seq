@@ -29,7 +29,7 @@ class Corpus(Dataset):
         # Cleaning
         self.__len = len(self.en) if self.load_en else len(self.vi)
         if self.load_vi and self.load_en:
-            _corpus = [(en.strip(), vi.strip()) for en, vi in zip(self.en, self.vi) if en.strip() != '' and vi.strip() != '']
+            _corpus = list([(en.strip(), vi.strip()) for en, vi in zip(self.en, self.vi) if en.strip() != '' and vi.strip() != ''])
             self.en, self.vi = zip(*_corpus)
             assert len(self.en) == len(self.vi)
             self.__len = len(self.en)
