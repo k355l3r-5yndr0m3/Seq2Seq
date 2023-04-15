@@ -21,8 +21,8 @@ model = Seq2SeqTransformer(device=device)
 # optimizer = optim.Adam(model.parameters(), lr=1e-4)
 optimizer = optim.AdamW(model.parameters())
 
-dataloader = get_dataloader(Corpus(cutoff=128), starting_value=start, ending_value=end, padding_value=padding,
-                            token_limit=2**13+2**11, num_workers=2)
+dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding,
+                            token_limit=2**13+2**12+2**10, num_workers=0)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean', label_smoothing=0.1)
 
 if load_latest_checkpoint(model, optimizer):
@@ -32,6 +32,6 @@ else:
 
 with open("losses_graph", "w") as graph:
     for epoch in range(epoch_num):
-        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, exclaim_each_batch=False)
+        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, exclaim_each_batch=True)
         print("Saving checkpoint.")
         keep_n_checkpoints(model, optimizer, keep_n=num_checkpoints)
