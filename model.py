@@ -68,7 +68,7 @@ class Seq2SeqTransformer(nn.Module):
         rem = self.tok_emb.weight
 
         # cosine similarity
-        logits = out @ rem.transpose(0, 1) / math.sqrt(rem.shape[0])
+        logits = out @ rem.transpose(0, 1) / math.sqrt(out.shape[-1])
         return logits
 
 

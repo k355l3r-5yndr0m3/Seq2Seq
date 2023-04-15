@@ -50,6 +50,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
                 print_loss: bool = True, aggregate_over_nbatch: int = 32, return_losses: bool = False,
                 loss_take_arg: bool = False, exclaim_each_batch: bool = True, on_device: str = 'cpu',
                 write_loss_to=sys.stdout, write_batch_num=sys.stdout) -> None | list[float]:
+    model.train()
     loss_scale_factor = 1.0 / aggregate_over_nbatch if loss_take_arg else 1.0
     loss_aggregate = 0.0
     losses = [] if return_losses else None
