@@ -31,7 +31,6 @@ else:
 
 with open("losses_graph", "w") as graph:
     for epoch in range(epoch_num):
-        losses = train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, return_losses=True)
-        print(f"EPOCH {epoch+1}/{epoch_num}: ", end='', file=graph)
-        print(*losses, sep=', ', end='\n', file=graph, flush=True)
+        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, exclaim_each_batch=False)
+        print("Saving checkpoint.")
         keep_n_checkpoints(model, optimizer, keep_n=num_checkpoints)

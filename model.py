@@ -1,4 +1,5 @@
 import torch
+import math
 
 from torch import nn
 from torch import Tensor
@@ -44,6 +45,7 @@ class Seq2SeqTransformer(nn.Module):
         self.padding = padding
         self.use_tgt_mask = use_tgt_mask
 
+
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
         tgt_seq_len = tgt.size(dim=-1)
 
@@ -61,11 +63,12 @@ class Seq2SeqTransformer(nn.Module):
         tgt = self.pos_emb(tgt)
 
         out = self.transformer(src=src, tgt=tgt, tgt_mask=tgt_mask, src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
-        out = F.normalize(out, dim=-1)
-        rem = F.normalize(self.tok_emb.weight, dim=-1)
+        # out = F.normalize(out, dim=-1)
+        # rem = F.normalize(self.tok_emb.weight, dim=-1)
+        rem = self.tok_emb.weight
 
         # cosine similarity
-        logits = out @ rem.transpose(0, 1)
+        logits = out @ rem.transpose(0, 1) / math.sqrt(rem.shape[0])
         return logits
 
 
