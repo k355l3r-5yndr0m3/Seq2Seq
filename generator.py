@@ -1,4 +1,5 @@
 import torch
+import sys
 
 from torch import Tensor, nn
 from torch.nn import functional as F
@@ -67,25 +68,30 @@ def contrastive_search(model: nn.Module, embedding: Tensor, src: str | Tensor, k
 
 
 
-if __name__ == "__main__":
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = Seq2SeqTransformer(device=device)
-    load_latest_checkpoint(model, None)
-    vocab = load_vocab("sp_unigram.vocab")
-    nalpha = 11
+
+def testing(model: Seq2SeqTransformer, device: str = 'cpu', nalpha: int = 11, test_cases: list[str] | None = None,
+            write_result_to=sys.stdout, vocab: list[str] | None = None):
+    vocab = load_vocab("sp_unigram.vocab") if vocab is None else vocab
     alphas: [float] = torch.linspace(0.0, 1.0, nalpha, dtype=torch.float).tolist()
     test_cases = [
         "Try to translate this sentence .",
         "Handl TyPo, ad ther odities.",
-    ]
+    ] if test_cases is None else test_cases
     for src, alpha in product(test_cases, alphas):
         result: Tensor = contrastive_search(model, model.tok_emb.weight, src, device=device, alpha=alpha)
         result: list[int] = result.tolist()
         result: list[str] = [vocab[token] for token in result]
-        print(f"alpha={alpha} \"{src}\" -> \"", *result, '"', sep='', end='\n')
+        print(f"alpha={alpha} \"{src}\" -> \"", *result, '"', sep='', end='\n', file=write_result_to)
 
 
 
+
+
+
+if __name__ == "__main__":
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = Seq2SeqTransformer(device=device)
+    testing(model, device)
 
 
 
