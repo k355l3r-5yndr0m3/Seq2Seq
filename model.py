@@ -45,7 +45,7 @@ class Seq2SeqTransformer(nn.Module):
         self.use_tgt_mask = use_tgt_mask
         self.decople_token_decoder = decople_token_decoder
         if decople_token_decoder:
-            self.tok_decoder = nn.Linear(embedding_dim, vocab_size)
+            self.tok_decoder = nn.Linear(embedding_dim, vocab_size, device=device)
 
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
