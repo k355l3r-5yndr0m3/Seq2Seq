@@ -51,8 +51,8 @@ class Seq2SeqTransformer(nn.Module):
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
         tgt_seq_len = tgt.size(dim=-1)
 
-        src_padding_mask = torch.zeros_like(src).masked_fill(src == self.padding, float('-inf')) if self.padding is not None else None
-        tgt_padding_mask = torch.zeros_like(tgt).masked_fill(tgt == self.padding, float('-inf')) if self.padding is not None else None
+        src_padding_mask = torch.zeros_like(src).float().masked_fill(src == self.padding, float('-inf')) if self.padding is not None else None
+        tgt_padding_mask = torch.zeros_like(tgt).float().masked_fill(tgt == self.padding, float('-inf')) if self.padding is not None else None
 
         tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_seq_len, device=tgt.device) if self.use_tgt_mask else None
 
