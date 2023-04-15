@@ -11,7 +11,7 @@ from utils import keep_n_checkpoints, load_latest_checkpoint
 start = 1
 end = 2
 padding = 3
-epoch_num = 32
+epoch_num = 512
 num_checkpoints = 4
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,7 +21,8 @@ model = Seq2SeqTransformer(device=device)
 # optimizer = optim.Adam(model.parameters(), lr=1e-4)
 optimizer = optim.AdamW(model.parameters())
 
-dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding, token_limit=2**13+2**11)
+dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding, token_limit=2**13+2**11,
+                            num_workers=2)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean', label_smoothing=0.1)
 
 if load_latest_checkpoint(model, optimizer):

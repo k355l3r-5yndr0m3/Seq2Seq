@@ -39,8 +39,9 @@ def collate_fn(tokenizer, starting_value: int, ending_value: int, padding_value:
 
 
 def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True, tokenizer: callable = sp_unigram,
-                   starting_value: int = 1, ending_value: int = 2, padding_value: int = 3, token_limit: int = 512):
-    return DataLoader(corpus, batch_size=batch_size, shuffle=shuffle,
+                   starting_value: int = 1, ending_value: int = 2, padding_value: int = 3, token_limit: int = 512,
+                   num_workers: int = 0):
+    return DataLoader(corpus, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
                       collate_fn=collate_fn(tokenizer, starting_value, ending_value, padding_value, token_limit))
 
 
