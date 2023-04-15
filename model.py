@@ -30,7 +30,7 @@ class PositionEmbedding(nn.Module):
 class Seq2SeqTransformer(nn.Module):
     def __init__(self, nhead: int = 8, embedding_dim: int = 512, num_encoder_layers: int = 8, num_decoder_layers: int = 6,
                  dim_feedforward: int = 2048, vocab_size: int = 2**14, dropout: float = 0.1, padding: None | int = None,
-                 use_tgt_mask: bool = True, device=torch.device('cpu')):
+                 use_tgt_mask: bool = True, device=torch.device('cpu'), decople_token_decoder: bool = False):
         super().__init__()
         self.tok_emb = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
         self.pos_emb = PositionEmbedding(embedding_dim=embedding_dim, device=device)
@@ -41,9 +41,11 @@ class Seq2SeqTransformer(nn.Module):
                                           dim_feedforward=dim_feedforward, dropout=dropout,
                                           activation=F.leaky_relu, batch_first=True,
                                           device=device)
-
         self.padding = padding
         self.use_tgt_mask = use_tgt_mask
+        self.decople_token_decoder = decople_token_decoder
+        if decople_token_decoder:
+            self.tok_decoder = nn.Linear(embedding_dim, vocab_size)
 
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
@@ -62,13 +64,16 @@ class Seq2SeqTransformer(nn.Module):
         tgt = self.dropout(tgt)
         tgt = self.pos_emb(tgt)
 
-        out = self.transformer(src=src, tgt=tgt, tgt_mask=tgt_mask, src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
-        # out = F.normalize(out, dim=-1)
-        # rem = F.normalize(self.tok_emb.weight, dim=-1)
-        rem = self.tok_emb.weight
+        logits = self.transformer(src=src, tgt=tgt, tgt_mask=tgt_mask, src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
+        if self.decople_token_decoder:
+            logits = self.tok_decoder(logits)
+        else:
+            # out = F.normalize(out, dim=-1)
+            # rem = F.normalize(self.tok_emb.weight, dim=-1)
+            rem = self.tok_emb.weight
 
-        # cosine similarity
-        logits = out @ rem.transpose(0, 1) / math.sqrt(out.shape[-1])
+            # cosine similarity
+            logits = logits @ rem.transpose(0, 1) / math.sqrt(logits.shape[-1])
         return logits
 
 

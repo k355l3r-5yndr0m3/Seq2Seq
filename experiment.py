@@ -17,13 +17,13 @@ num_checkpoints = 4
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = Seq2SeqTransformer(device=device)
+model = Seq2SeqTransformer(padding=padding, decople_token_decoder=True, device=device)
 # optimizer = optim.Adadelta(model.parameters())
 # optimizer = optim.Adam(model.parameters(), lr=1e-4)
 optimizer = optim.AdamW(model.parameters(), lr=1e-3)
 
 dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding,
-                            token_limit=2**13+2**8, num_workers=0)
+                            token_limit=2**13+2**8)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean', label_smoothing=0.1)
 
 if load_latest_checkpoint(model, optimizer):
