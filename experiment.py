@@ -17,7 +17,7 @@ num_checkpoints = 4
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = Seq2SeqTransformer(padding=padding, decople_token_decoder=True, device=device)
+model = Seq2SeqTransformer(padding=padding, device=device)
 # optimizer = optim.Adadelta(model.parameters())
 # optimizer = optim.Adam(model.parameters(), lr=1e-4)
 optimizer = optim.AdamW(model.parameters(), lr=1e-3)
@@ -34,6 +34,7 @@ else:
 with open("losses_graph", "w", buffering=1) as graph, open("translation_test", "w", buffering=1) as translation:
     for epoch in range(epoch_num):
         train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, write_loss_to=graph)
-        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}\n", file=graph)
+        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
         testing(model, device=device, write_result_to=translation)
+        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
         keep_n_checkpoints(model, optimizer, keep_n=num_checkpoints)
