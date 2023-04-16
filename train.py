@@ -47,6 +47,7 @@ def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True,
 
 
 def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optimizer, criterion: callable,
+                scheduler: optim.lr_scheduler.LRScheduler | None = None,
                 print_loss: bool = True, aggregate_over_nbatch: int = 32, return_losses: bool = False,
                 loss_take_arg: bool = False, exclaim_each_batch: bool = True, on_device: str = 'cpu',
                 write_loss_to=sys.stdout, write_batch_num=sys.stdout) -> None | list[float]:
@@ -63,12 +64,18 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
             tgt = tgt.to(device=on_device)
 
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
-            logits = model(src=src, tgt=tgt_in)
+            try:
+                logits = model(src=src, tgt=tgt_in)
+            except:
+                print(f"Something is wrong. src: {src.shape}, tgt: {tgt.shape}", file=sys.stderr)
+                continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
             loss = criterion(logits, tgt_out)
             loss_aggregate += loss.item() * loss_scale_factor
             loss.backward()
+        if scheduler is not None:
+            scheduler.step()
         optimizer.step()
         if (batch_num + 1) % aggregate_over_nbatch == 0 and print_loss:
             print(f"BATCH:{batch_num+1}/{len(dataloader)}->LOSS({'avg' if loss_take_arg else 'sum'} over {aggregate_over_nbatch} batch): {loss_aggregate}",

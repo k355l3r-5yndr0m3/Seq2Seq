@@ -1,7 +1,10 @@
 import torch
+import math
 
 from torch import optim
 from torch import nn
+
+from torch.optim import lr_scheduler
 
 from train import get_dataloader, train_epoch
 from model import Seq2SeqTransformer
@@ -15,12 +18,17 @@ padding = 3
 epoch_num = 512
 num_checkpoints = 4
 
+d_model = 1024
+warmup_step = 4000
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = Seq2SeqTransformer(padding=padding, device=device)
+model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model)
 # optimizer = optim.Adadelta(model.parameters())
-# optimizer = optim.Adam(model.parameters(), lr=1e-4)
-optimizer = optim.AdamW(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.98), eps=1e-9)
+scheduler = lr_scheduler.LambdaLR(optimizer=optimizer,
+                                  lr_lambda=lambda step_num: math.sqrt(d_model) * min(step_num**(-1/2), step_num*(warmup_step**(-3/2))))
+# optimizer = optim.AdamW(model.parameters(), lr=1e-3)
 
 dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding,
                             token_limit=2**13+2**8)
@@ -33,8 +41,8 @@ else:
 
 with open("losses_graph", "w", buffering=1) as graph, open("translation_test", "w", buffering=1) as translation:
     for epoch in range(epoch_num):
-        train_epoch(dataloader, model, optimizer, criterion, on_device=device, loss_take_arg=True, write_loss_to=graph)
+        train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=True, write_loss_to=graph)
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
         testing(model, device=device, write_result_to=translation)
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
-        keep_n_checkpoints(model, optimizer, keep_n=num_checkpoints)
+        keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)

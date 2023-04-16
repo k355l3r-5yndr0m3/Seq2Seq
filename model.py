@@ -30,9 +30,16 @@ class PositionEmbedding(nn.Module):
 class Seq2SeqTransformer(nn.Module):
     def __init__(self, nhead: int = 8, embedding_dim: int = 512, num_encoder_layers: int = 8, num_decoder_layers: int = 6,
                  dim_feedforward: int = 2048, vocab_size: int = 2**14, dropout: float = 0.1, padding: None | int = None,
-                 use_tgt_mask: bool = True, device=torch.device('cpu'), decople_token_decoder: bool = False):
+                 use_tgt_mask: bool = True, device=torch.device('cpu'), decople_token_decoder: bool = False,
+                 seperate_embedding: bool = False):
         super().__init__()
-        self.tok_emb = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
+        self.tok_emb = nn.embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
+        self.src_tok_emb = self.tok_emb if not seperate_embedding else nn.Embedding(num_embeddings=vocab_size,
+                                                                                    embedding_dim=embedding_dim,
+                                                                                    padding_idx=padding,
+                                                                                    device=device)
+
+
         self.pos_emb = PositionEmbedding(embedding_dim=embedding_dim, device=device)
         self.dropout = nn.Dropout(p=dropout)
         self.transformer = nn.Transformer(d_model=embedding_dim, nhead=nhead,
@@ -56,7 +63,7 @@ class Seq2SeqTransformer(nn.Module):
 
         tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_seq_len, device=tgt.device) if self.use_tgt_mask else None
 
-        src = self.tok_emb(src)
+        src = self.src_tok_emb(src)
         src = self.dropout(src)
         src = self.pos_emb(src)
 
