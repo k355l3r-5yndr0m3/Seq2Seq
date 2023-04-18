@@ -39,15 +39,15 @@ def keep_n_checkpoints(model: nn.Module, optimizer: optim.Optimizer, scheduler: 
 
 
 def load_latest_checkpoint(model: nn.Module, optimizer: optim.Optimizer, scheduler: optim.lr_scheduler.LRScheduler,
-                           checkpoints_dir: str = "checkpoints/") -> bool:
+                           checkpoints_dir: str = "checkpoints/") -> int | None:
     if not path.exists(checkpoints_dir):
-        return False
+        return None
     older_checkpoints = [cp for cp in listdir(checkpoints_dir) if fnmatch(cp, "checkpoint-*.pth")]
     newest_idx = max([int(cp.split('-')[1].split('.')[0]) for cp in older_checkpoints]) if len(older_checkpoints) > 0 else None
     if newest_idx is None:
-        return False
+        return None
     load_check_point(model, optimizer, scheduler, load_path=path.join(checkpoints_dir, f"checkpoint-{newest_idx}.pth"))
-    return True
+    return newest_idx
 
 
 def load_vocab(vocab_file: str) -> list[str]:

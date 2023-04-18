@@ -54,6 +54,7 @@ def contrastive_search(model: nn.Module, embedding: Tensor, src: str | Tensor, k
     net = F.normalize(embedding, dim=-1).transpose(1, 0)
     while True:
         logits = torch.normal(model(src, tgt)[-1], temp)
+        logits = F.softmax(logits, dim=-1)
         topk = torch.topk(logits, k)
         topk_tokens, topk_logits = topk.indices, topk.values
         topk_token_embs = F.normalize(embedding[topk_tokens], dim=-1)

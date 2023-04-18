@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import os
 
 class Corpus(Dataset):
-    def __init__(self, contain_only: Union[None, str] = None, multiplex: bool = True, cutoff: int | None = None):
+    def __init__(self, contain_only: Union[None, str] = None, multiplex: bool = True, cutoff: int | None = None, validation_set: bool = False):
         self.multiplex = multiplex
         self.dataset_path = os.path.dirname(os.path.realpath(__file__))
         self.dataset_path = os.path.join(self.dataset_path, "iwslt_en_vi")
@@ -16,13 +16,15 @@ class Corpus(Dataset):
 
         self.en = []
         if self.load_en:
-            for english in ['train.en']:
+            ds_files = ['train.en'] if not validation_set else ['tst2012.en', 'tst2013.en']
+            for english in ds_files:
                 with open(os.path.join(self.dataset_path, english)) as corpus:
                     self.en += corpus.readlines()
 
         self.vi = []
         if self.load_vi:
-            for vietnamese in ['train.vi']:
+            ds_files = ['train.vi'] if not validation_set else ['tst2012.vi', 'tst2013.vi']
+            for vietnamese in ds_files:
                 with open(os.path.join(self.dataset_path, vietnamese)) as corpus:
                     self.vi += corpus.readlines()
 

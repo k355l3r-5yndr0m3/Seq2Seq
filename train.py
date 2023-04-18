@@ -74,9 +74,9 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
             loss = criterion(logits, tgt_out)
             loss_aggregate += loss.item() * loss_scale_factor
             loss.backward()
+        optimizer.step()
         if scheduler is not None:
             scheduler.step()
-        optimizer.step()
         if (batch_num + 1) % aggregate_over_nbatch == 0 and print_loss:
             print(f"BATCH:{batch_num+1}/{len(dataloader)}->LOSS({'avg' if loss_take_arg else 'sum'} over {aggregate_over_nbatch} batch): {loss_aggregate}",
                   file=write_loss_to)
@@ -84,6 +84,29 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
                 losses.append(loss_aggregate)
             loss_aggregate = 0.0
     return losses
+
+
+def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, device: str = 'cpu') -> float:
+    model.eval()
+    total = 0.0
+    factor = 1.0 / len(dataloader)
+    for batch in dataloader:
+        tally = 0.0
+        for src, tgt in batch:
+            src = src.to(device=device)
+            tgt = tgt.to(device=device)
+            tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
+            try:
+                logits = model(src=src, tgt=tgt_in)
+            except:
+                print(f"Something is wrong. src: {src.shape}, tgt: {tgt.shape}", file=sys.stderr)
+                continue
+            logits = torch.flatten(logits, 0, 1)
+            tgt_out = torch.flatten(tgt_out, 0, 1)
+            loss = criterion(logits, tgt_out)
+            tally += loss.item()
+        total += tally * factor
+    return factor
 
 
 if __name__ == "__main__":
