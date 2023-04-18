@@ -74,9 +74,9 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
             loss = criterion(logits, tgt_out)
             loss_aggregate += loss.item() * loss_scale_factor
             loss.backward()
+        optimizer.step()
         if scheduler is not None:
             scheduler.step()
-        optimizer.step()
         if (batch_num + 1) % aggregate_over_nbatch == 0 and print_loss:
             print(f"BATCH:{batch_num+1}/{len(dataloader)}->LOSS({'avg' if loss_take_arg else 'sum'} over {aggregate_over_nbatch} batch): {loss_aggregate}",
                   file=write_loss_to)

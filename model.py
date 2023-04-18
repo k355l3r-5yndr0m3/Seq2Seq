@@ -33,7 +33,7 @@ class Seq2SeqTransformer(nn.Module):
                  use_tgt_mask: bool = True, device=torch.device('cpu'), decople_token_decoder: bool = False,
                  seperate_embedding: bool = False):
         super().__init__()
-        self.tok_emb = nn.embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
+        self.tok_emb = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
         self.src_tok_emb = self.tok_emb if not seperate_embedding else nn.Embedding(num_embeddings=vocab_size,
                                                                                     embedding_dim=embedding_dim,
                                                                                     padding_idx=padding,
