@@ -31,7 +31,7 @@ class Seq2SeqTransformer(nn.Module):
     def __init__(self, nhead: int = 8, embedding_dim: int = 512, num_encoder_layers: int = 8, num_decoder_layers: int = 6,
                  dim_feedforward: int = 2048, vocab_size: int = 2**14, dropout: float = 0.1, padding: None | int = None,
                  use_tgt_mask: bool = True, device=torch.device('cpu'), decople_token_decoder: bool = False,
-                 seperate_embedding: bool = False):
+                 seperate_embedding: bool = False, normalize_logit: bool = True):
         super().__init__()
         self.tok_emb = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=padding, device=device)
         self.src_tok_emb = self.tok_emb if not seperate_embedding else nn.Embedding(num_embeddings=vocab_size,
@@ -53,6 +53,7 @@ class Seq2SeqTransformer(nn.Module):
         self.decople_token_decoder = decople_token_decoder
         if decople_token_decoder:
             self.tok_decoder = nn.Linear(embedding_dim, vocab_size, device=device)
+        self.normalize_logit = normalize_logit
 
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
@@ -81,8 +82,8 @@ class Seq2SeqTransformer(nn.Module):
 
             # cosine similarity
             logits = logits @ rem.transpose(0, 1) / math.sqrt(logits.shape[-1])
+        logits = F.layer_norm(logits, logits.shape[-1]) if self.normalize_logit else logits
         return logits
-
 
 
 
