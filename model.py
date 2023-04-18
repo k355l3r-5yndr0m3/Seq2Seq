@@ -82,7 +82,7 @@ class Seq2SeqTransformer(nn.Module):
 
             # cosine similarity
             logits = logits @ rem.transpose(0, 1) / math.sqrt(logits.shape[-1])
-        logits = F.layer_norm(logits, logits.shape[-1]) if self.normalize_logit else logits
+        logits = F.layer_norm(logits, [logits.shape[-1]]) if self.normalize_logit else logits
         return logits
 
 
