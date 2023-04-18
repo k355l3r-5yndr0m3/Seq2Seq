@@ -106,7 +106,7 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
             loss = criterion(logits, tgt_out)
             tally += loss.item()
         total += tally * factor
-    return factor
+    return total
 
 
 if __name__ == "__main__":
