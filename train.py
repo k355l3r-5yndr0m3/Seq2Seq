@@ -10,7 +10,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torchtext.data.functional import sentencepiece_numericalizer, load_sp_model
 from torchtext.functional import to_tensor
-
+from model import Seq2SeqTransformer
 
 sp_model = load_sp_model("sp_unigram.model")
 sp_unigram = sentencepiece_numericalizer(sp_model)
@@ -66,8 +66,9 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
             try:
                 logits = model(src=src, tgt=tgt_in)
-            except:
+            except Exception as e:
                 print(f"Something is wrong. src: {src.shape}, tgt: {tgt.shape}", file=sys.stderr)
+                print(e, file=sys.stderr)
                 continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
@@ -91,7 +92,6 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
     total = 0.0
     factor = 1.0 / len(dataloader)
     for batch in dataloader:
-        tally = 0.0
         for src, tgt in batch:
             src = src.to(device=device)
             tgt = tgt.to(device=device)
@@ -104,15 +104,16 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
             loss = criterion(logits, tgt_out)
-            tally += loss.item()
-        total += tally * factor
+            total += loss.item() * factor
     return total
 
 
 if __name__ == "__main__":
-    for datum in get_dataloader(corpus=Corpus()):
-        print(*datum)
-        break
+    model = Seq2SeqTransformer(device='cuda')
+    validate_set = get_dataloader(Corpus(validation_set=True), starting_value=1, ending_value=2, padding_value=3,
+                                  token_limit=2**13+2**8)
+    criterion = nn.CrossEntropyLoss(ignore_index=3, reduction='mean', label_smoothing=0.1)
+    print(validate(validate_set, model, criterion, device='cuda'))
 
 
 

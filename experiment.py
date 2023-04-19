@@ -16,7 +16,7 @@ end = 2
 padding = 3
 epoch_num = 512
 num_checkpoints = 4
-validate_period = 8
+validate_period = 2
 
 d_model = 512
 warmup_step = 4000
@@ -44,12 +44,12 @@ else:
     print("training from scratch.")
 
 with open("losses_graph", "a", buffering=1) as graph, open("translation_test", "a", buffering=1) as translation, open("vali_graph", "a", buffering=1) as vali:
-    for epoch in range(start_epoch_num, epoch_num):
+    for epoch in range(start_epoch_num+1, epoch_num):
         train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=True, write_loss_to=graph)
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
         testing(model, device=device, write_result_to=translation)
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
         keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)
         if (epoch+1) % validate_period == 0:
-            val = validate(validate_set, model, criterion)
+            val = validate(validate_set, model, criterion, device='cuda')
             print(f'========{epoch+1} VALIDATION:{val}', file=vali)
