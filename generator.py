@@ -76,7 +76,8 @@ def contrastive_search(model: nn.Module, embedding: Tensor, src: str | Tensor, k
 
 
 def testing(model: Seq2SeqTransformer, device: str = 'cpu', test_cases: list[str] | None = None,
-            write_result_to=sys.stdout, vocab: list[str] | None = None):
+            write_result_to=sys.stdout, vocab: list[str] | None = None,
+            start: int = 1, end: int = 2, padding: int = 3):
     vocab = load_vocab("sp_unigram.vocab") if vocab is None else vocab
     # alphas: [float] = torch.linspace(0.0, 1.0, nalpha, dtype=torch.float).tolist()
     test_cases = [
@@ -86,7 +87,7 @@ def testing(model: Seq2SeqTransformer, device: str = 'cpu', test_cases: list[str
         "Handl TyPo, ad ther odities.",
     ] if test_cases is None else test_cases
     for src in test_cases:
-        tgt = [vocab[i] for i in beam_search(model, src, width=8, device=device, limit=1.2).tolist() if i > 3]
+        tgt = [vocab[i] for i in beam_search(model, src, width=8, device=device, limit=1.2, start=start, end=end, pad=padding).tolist() if i > 3]
         tgt = ''.join(tgt).replace('▁', ' ')
         print(f'"{src}" -> "{tgt}"', file=write_result_to)
 
