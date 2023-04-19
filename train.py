@@ -48,7 +48,7 @@ def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True,
 
 def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optimizer, criterion: callable,
                 scheduler: optim.lr_scheduler.LRScheduler | None = None,
-                print_loss: bool = True, aggregate_over_nbatch: int = 32, return_losses: bool = False,
+                print_loss: bool = True, aggregate_over_nbatch: int = 1, return_losses: bool = False,
                 loss_take_arg: bool = False, exclaim_each_batch: bool = True, on_device: str = 'cpu',
                 write_loss_to=sys.stdout, write_batch_num=sys.stdout) -> None | list[float]:
     model.train()
