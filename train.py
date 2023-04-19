@@ -98,8 +98,9 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
             try:
                 logits = model(src=src, tgt=tgt_in)
-            except:
+            except Exception as e:
                 print(f"Something is wrong. src: {src.shape}, tgt: {tgt.shape}", file=sys.stderr)
+                print(e, file=sys.stderr)
                 continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
