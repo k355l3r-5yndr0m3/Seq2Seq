@@ -48,7 +48,7 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
     for epoch in range(start_epoch_num, epoch_num):
         # training
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
-        train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=True, write_loss_to=graph)
+        train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=False, write_loss_to=graph)
         print(f"{'='*32}\n", file=graph)
 
         # translate some phrases
@@ -60,7 +60,7 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
         keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)
         val = validate(validate_set, model, criterion, device=device)
         print(f'{epoch+1} {val}', file=vali)
-        if epoch > 31 and validate_best > val:  # after 32 epoch, start saving best performer
+        if validate_best > val:  # saving best performer
             print("Saving best so far... ", val)
             save_check_point(model, None, None, 'best.pth')
         validate_best = min(validate_best, val)
