@@ -17,7 +17,7 @@ padding = 3
 epoch_num = 512
 num_checkpoints = 4
 
-d_model = 512
+d_model = 1024
 warmup_step = 4000
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -29,9 +29,9 @@ scheduler = lr_scheduler.LambdaLR(optimizer=optimizer, verbose=True,
                                   lr_lambda=lambda step_num: (d_model**(-0.5)) * min((step_num+1)**(-1/2), step_num*(warmup_step**(-3/2))))
 # optimizer = optim.AdamW(model.parameters(), lr=1e-3)
 
-dataloader = get_dataloader(Corpus(), starting_value=start, ending_value=end, padding_value=padding,
+dataloader = get_dataloader(Corpus(bidirectional=True), starting_value=start, ending_value=end, padding_value=padding,
                             token_limit=2**13+2**8)
-validate_set = get_dataloader(Corpus(validation_set=True), starting_value=start, ending_value=end, padding_value=padding,
+validate_set = get_dataloader(Corpus(validation_set=True, bidirectional=True), starting_value=start, ending_value=end, padding_value=padding,
                               token_limit=2**13+2**8)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean', label_smoothing=0.1)
 
@@ -42,6 +42,7 @@ if start_epoch_num is not None:
 else:
     start_epoch_num = 0
     print("training from scratch.")
+
 
 validate_best = float('inf')
 with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a", buffering=1) as translation, open("validate_loss", "a", buffering=1) as vali:
