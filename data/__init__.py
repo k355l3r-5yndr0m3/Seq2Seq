@@ -3,7 +3,8 @@ from torch.utils.data import Dataset
 import os
 
 class Corpus(Dataset):
-    def __init__(self, contain_only: Union[None, str] = None, multiplex: bool = True, cutoff: int | None = None, validation_set: bool = False):
+    def __init__(self, contain_only: Union[None, str] = None, multiplex: bool = True, cutoff: int | None = None, validation_set: bool = False,
+                 bidirectional: bool = False):
         self.multiplex = multiplex
         self.dataset_path = os.path.dirname(os.path.realpath(__file__))
         self.dataset_path = os.path.join(self.dataset_path, "iwslt_en_vi")
@@ -39,6 +40,15 @@ class Corpus(Dataset):
                 self.__len *= 2
         if cutoff is not None:
             self.__len = min(cutoff, self.__len)
+        if bidirectional:
+            assert contain_only is None
+            assert multiplex
+            self.__len = self.__len * 2
+            _en = self.en + self.vi
+            _vi = self.vi + self.en
+            self.en = _en
+            self.vi = _vi
+
 
 
     def __len__(self):
