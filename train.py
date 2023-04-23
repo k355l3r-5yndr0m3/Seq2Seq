@@ -22,20 +22,22 @@ def collate_fn(tokenizer, starting_value: int, ending_value: int, padding_value:
         en, vi = tokenizer(en), tokenizer(vi)
         pairs = sorted(zip(en, vi), key=lambda pair: max(len(pair[0]), len(pair[1])), reverse=True)
         ntoks = [len(en) + len(vi) for en, vi in pairs]
+        batch_size = len(pairs)
         while ntoks[0] * len(ntoks) > token_limit:  # if the produced tensor is too big, split them
             split_size = token_limit // ntoks[0]
             if split_size > 0:
                 en, vi = zip(*pairs[:split_size])
                 en = to_tensor([[starting_value]+s+[ending_value] for s in en], padding_value=padding_value)
                 vi = to_tensor([[starting_value]+s+[ending_value] for s in vi], padding_value=padding_value)
-                yield (en, vi)
+                yield (en, vi, split_size / batch_size)
             else:
                 warnings.warn(f'token_limit={token_limit} is too small for some samples in the dataset. Consider rasing it.')
             pairs = pairs[split_size:]
             ntoks = ntoks[split_size:]
+        factor = len(pairs) / batch_size
         en, vi = zip(*pairs)
         en, vi = to_tensor(list(en), padding_value=padding_value), to_tensor(list(vi), padding_value=padding_value)
-        yield (en, vi)
+        yield (en, vi, factor)
     return collate
 
 
@@ -59,7 +61,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
         if exclaim_each_batch:
             print(f"BATCH:{batch_num+1}/{len(dataloader)}", file=write_batch_num)
         optimizer.zero_grad()
-        for src, tgt in batch:
+        for src, tgt, factor in batch:
             src = src.to(device=on_device)
             tgt = tgt.to(device=on_device)
 
@@ -72,7 +74,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
                 continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
-            loss = criterion(logits, tgt_out)
+            loss = criterion(logits, tgt_out) * factor
             loss_aggregate += loss.item() * loss_scale_factor
             loss.backward()
         optimizer.step()
@@ -84,6 +86,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
             if return_losses:
                 losses.append(loss_aggregate)
             loss_aggregate = 0.0
+        del batch
     return losses
 
 
@@ -92,7 +95,7 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
     total = 0.0
     factor = 1.0 / len(dataloader)
     for batch in dataloader:
-        for src, tgt in batch:
+        for src, tgt, factor in batch:
             src = src.to(device=device)
             tgt = tgt.to(device=device)
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
@@ -104,8 +107,9 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
                 continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
-            loss = criterion(logits, tgt_out)
+            loss = criterion(logits, tgt_out) * factor
             total += loss.item() * factor
+            del src, tgt, tgt_in, tgt_out, loss, logits
     return total
 
 

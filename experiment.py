@@ -17,22 +17,20 @@ padding = 3
 epoch_num = 512
 num_checkpoints = 4
 
-d_model = 1024
+d_model = 512
 warmup_step = 4000
+split_max_token = 2**12+2**9
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model)
+model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model,
+                           num_encoder_layers = 8)
 # optimizer = optim.Adadelta(model.parameters())
 optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
 scheduler = lr_scheduler.LambdaLR(optimizer=optimizer, verbose=True,
                                   lr_lambda=lambda step_num: (d_model**(-0.5)) * min((step_num+1)**(-1/2), step_num*(warmup_step**(-3/2))))
 # optimizer = optim.AdamW(model.parameters(), lr=1e-3)
 
-dataloader = get_dataloader(Corpus(bidirectional=True), starting_value=start, ending_value=end, padding_value=padding,
-                            token_limit=2**13+2**8)
-validate_set = get_dataloader(Corpus(validation_set=True, bidirectional=True), starting_value=start, ending_value=end, padding_value=padding,
-                              token_limit=2**13+2**8)
 criterion = nn.CrossEntropyLoss(ignore_index=padding, reduction='mean', label_smoothing=0.1)
 
 start_epoch_num = load_latest_checkpoint(model, optimizer, scheduler)
@@ -48,19 +46,25 @@ validate_best = float('inf')
 with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a", buffering=1) as translation, open("validate_loss", "a", buffering=1) as vali:
     for epoch in range(start_epoch_num, epoch_num):
         # training
+        dataloader = get_dataloader(Corpus(bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
+                                    token_limit=split_max_token)
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
         train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=False, write_loss_to=graph)
         print(f"{'='*32}\n", file=graph)
-
+        del dataloader
         # translate some phrases
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
         testing(model, device=device, write_result_to=translation)
         print(f"{'='*32}\n", file=translation)
 
+
         # validate
+        validate_set = get_dataloader(Corpus(validation_set=True, bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
+                                      token_limit=split_max_token)
         keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)
         val = validate(validate_set, model, criterion, device=device)
         print(f'{epoch+1} {val}', file=vali)
+        del validate_set
         if validate_best > val:  # saving best performer
             print("Saving best so far... ", val)
             save_check_point(model, None, None, 'best.pth')
