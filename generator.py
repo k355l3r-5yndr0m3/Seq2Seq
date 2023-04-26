@@ -6,10 +6,9 @@ from torch.nn import functional as F
 
 from train import sp_unigram
 from model import Seq2SeqTransformer
-from utils import load_vocab, load_latest_checkpoint
+from utils import load_vocab
 
 from torchtext.functional import to_tensor
-from itertools import product
 
 
 def beam_search(model: nn.Module, src: str | Tensor, width: int = 8, return_score: bool = False,

@@ -24,7 +24,7 @@ split_max_token = 2**12+2**9
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model,
-                           num_encoder_layers = 8)
+                           num_encoder_layers=8)
 # optimizer = optim.Adadelta(model.parameters())
 optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
 scheduler = lr_scheduler.LambdaLR(optimizer=optimizer, verbose=True,
