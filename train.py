@@ -81,7 +81,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
         if scheduler is not None:
             scheduler.step()
         if (batch_num + 1) % aggregate_over_nbatch == 0 and print_loss:
-            print(f"BATCH:{batch_num+1}/{len(dataloader)}->LOSS({'avg' if loss_take_arg else 'sum'} over {aggregate_over_nbatch} batch): {loss_aggregate}",
+            print(f"BATCH:{batch_num+1}/{len(dataloader)}->{loss_aggregate}",
                   file=write_loss_to)
             if return_losses:
                 losses.append(loss_aggregate)
@@ -95,7 +95,7 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
     total = 0.0
     factor = 1.0 / len(dataloader)
     for batch in dataloader:
-        for src, tgt, factor in batch:
+        for src, tgt, f in batch:
             src = src.to(device=device)
             tgt = tgt.to(device=device)
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
@@ -107,8 +107,8 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
                 continue
             logits = torch.flatten(logits, 0, 1)
             tgt_out = torch.flatten(tgt_out, 0, 1)
-            loss = criterion(logits, tgt_out) * factor
-            total += loss.item() * factor
+            loss = criterion(logits, tgt_out) * factor * f
+            total += loss.item()
             del src, tgt, tgt_in, tgt_out, loss, logits
     return total
 

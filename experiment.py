@@ -14,10 +14,10 @@ from generator import testing
 start = 1
 end = 2
 padding = 3
-epoch_num = 128
+epoch_num = 64
 num_checkpoints = 4
 
-d_model = 512
+d_model = 1024
 warmup_step = 4000
 split_max_token = 2**13
 batch_size = 256
