@@ -14,18 +14,18 @@ from generator import testing
 start = 1
 end = 2
 padding = 3
-epoch_num = 64
+epoch_num = 128
 num_checkpoints = 4
 
 d_model = 1024
 warmup_step = 4000
 split_max_token = 2**13
-batch_size = 256
+batch_size = 64
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model,
-                           num_encoder_layers = 8, dropout = 0.1)
+                           num_encoder_layers=8, dropout=0.1)
 # optimizer = optim.Adadelta(model.parameters())
 optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
 scheduler = lr_scheduler.LambdaLR(optimizer=optimizer, verbose=True,
