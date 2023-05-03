@@ -34,12 +34,11 @@ with open("validate_translation", "w", buffering=1) as output:
             vi = vi.to(device=device).squeeze()
 
             print("EN(Ground truth): ", detoken(en), file=output)
-            tgt = "NOT ENOUGH MEMORY"
             try:
                 tgt = beam_search(model, en, width=4, device=device, limit=1.2, start=start, end=end, pad=padding).tolist()
+                print("VI(Translate)   : ", detoken(tgt), file=output)
             except:
-                pass
+                print("VI(Translate)   : ", "NOT ENOUGH MEMORY", file=output)
 
-            print("VI(Translate)   : ", tgt, file=output)
             print("VI(Ground truth): ", detoken(vi), file=output)
             print('-' * 64, file=output)

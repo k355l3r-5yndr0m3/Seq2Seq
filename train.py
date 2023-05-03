@@ -16,9 +16,9 @@ sp_model = load_sp_model("sp_unigram.model")
 sp_unigram = sentencepiece_numericalizer(sp_model)
 
 
-def collate_fn(tokenizer: callable | tuple[callable, callable], starting_value: int, ending_value: int, padding_value: int, token_limit: int = 512):
+def collate_fn(tokenizer, starting_value: int, ending_value: int, padding_value: int, token_limit: int = 512):
     tfn = None
-    if isinstance(tokenizer, callable):
+    if callable(tokenizer):
         def _tfn(en, vi):
             return (tokenizer(en), tokenizer(vi))
         tfn = _tfn
@@ -53,7 +53,7 @@ def collate_fn(tokenizer: callable | tuple[callable, callable], starting_value: 
     return collate
 
 
-def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True, tokenizer: callable | tuple[callable, callable] = sp_unigram,
+def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True, tokenizer = sp_unigram,
                    starting_value: int = 1, ending_value: int = 2, padding_value: int = 3, token_limit: int = 512,
                    num_workers: int = 0):
     return DataLoader(corpus, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
