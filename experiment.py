@@ -20,7 +20,7 @@ num_checkpoints = 4
 d_model = 1024
 warmup_step = 4000
 split_max_token = 2**13
-batch_size = 64
+batch_size = 512
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
