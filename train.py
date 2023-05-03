@@ -16,10 +16,22 @@ sp_model = load_sp_model("sp_unigram.model")
 sp_unigram = sentencepiece_numericalizer(sp_model)
 
 
-def collate_fn(tokenizer, starting_value: int, ending_value: int, padding_value: int, token_limit: int = 512):
+def collate_fn(tokenizer: callable | tuple[callable, callable], starting_value: int, ending_value: int, padding_value: int, token_limit: int = 512):
+    tfn = None
+    if isinstance(tokenizer, callable):
+        def _tfn(en, vi):
+            return (tokenizer(en), tokenizer(vi))
+        tfn = _tfn
+    else:
+        en_tok, vi_tok = tokenizer
+
+        def _tfn(en, vi):
+            return en_tok(en), vi_tok(vi)
+        tfn = _tfn
+
     def collate(batch: list[tuple[str, str]]) -> Iterable[tuple[Tensor, Tensor]]:
         en, vi = zip(*batch)
-        en, vi = tokenizer(en), tokenizer(vi)
+        en, vi = tfn(en, vi)
         pairs = sorted(zip(en, vi), key=lambda pair: max(len(pair[0]), len(pair[1])), reverse=True)
         ntoks = [len(en) + len(vi) for en, vi in pairs]
         batch_size = len(pairs)
@@ -41,7 +53,7 @@ def collate_fn(tokenizer, starting_value: int, ending_value: int, padding_value:
     return collate
 
 
-def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True, tokenizer: callable = sp_unigram,
+def get_dataloader(corpus: Dataset, batch_size: int = 512, shuffle: bool = True, tokenizer: callable | tuple[callable, callable] = sp_unigram,
                    starting_value: int = 1, ending_value: int = 2, padding_value: int = 3, token_limit: int = 512,
                    num_workers: int = 0):
     return DataLoader(corpus, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
