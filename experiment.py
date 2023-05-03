@@ -8,7 +8,7 @@ from torch.optim import lr_scheduler
 from train import get_dataloader, train_epoch, validate
 from model import Seq2SeqTransformer
 from data import Corpus
-from utils import keep_n_checkpoints, load_latest_checkpoint, save_check_point
+from utils import keep_n_checkpoints, load_latest_checkpoint, save_check_point, load_vocab
 from generator import testing
 from torchtext.data.functional import sentencepiece_numericalizer, load_sp_model
 
@@ -34,6 +34,7 @@ model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=Tr
 en_tokenizer = sentencepiece_numericalizer(load_sp_model("en_unig.model"))
 vi_tokenizer = sentencepiece_numericalizer(load_sp_model("vi_unig.model"))
 
+vi_vocab = load_vocab("vi_unig.vocab")
 
 # optimizer = optim.Adadelta(model.parameters())
 optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
@@ -64,7 +65,7 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
         del dataloader
         # translate some phrases
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
-        testing(model, device=device, write_result_to=translation)
+        testing(model, device=device, write_result_to=translation, src_tokenizer=en_tokenizer, vocab=vi_vocab)
         print(f"{'='*32}\n", file=translation)
 
         # validate
