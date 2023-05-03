@@ -40,6 +40,6 @@ with open("validate_translation", "w", buffering=1) as output:
             except:
                 pass
 
-            print("VI(Translate)   : ", detoken(tgt), file=output)
+            print("VI(Translate)   : ", tgt, file=output)
             print("VI(Ground truth): ", detoken(vi), file=output)
             print('-' * 64, file=output)
