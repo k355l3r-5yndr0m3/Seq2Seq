@@ -10,6 +10,7 @@ from model import Seq2SeqTransformer
 from data import Corpus
 from utils import keep_n_checkpoints, load_latest_checkpoint, save_check_point
 from generator import testing
+from torchtext.data.functional import sentencepiece_numericalizer, load_sp_model
 
 start = 1
 end = 2
@@ -22,10 +23,18 @@ warmup_step = 4000
 split_max_token = 2**13
 batch_size = 64
 
+new_vocab_size = 2**12
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model,
-                           num_encoder_layers=8, dropout=0.1)
+                           num_encoder_layers=8, dropout=0.1, vocab_size=new_vocab_size)
+
+
+en_tokenizer = sentencepiece_numericalizer(load_sp_model("en_unig.model"))
+vi_tokenizer = sentencepiece_numericalizer(load_sp_model("vi_unig.model"))
+
+
 # optimizer = optim.Adadelta(model.parameters())
 optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
 scheduler = lr_scheduler.LambdaLR(optimizer=optimizer, verbose=True,
@@ -48,7 +57,7 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
     for epoch in range(start_epoch_num, epoch_num):
         # training
         dataloader = get_dataloader(Corpus(bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
-                                    token_limit=split_max_token, batch_size=batch_size)
+                                    token_limit=split_max_token, batch_size=batch_size, tokenizer=(en_tokenizer, vi_tokenizer))
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
         train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=False, write_loss_to=graph)
         print(f"{'='*32}\n", file=graph)
@@ -58,10 +67,9 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
         testing(model, device=device, write_result_to=translation)
         print(f"{'='*32}\n", file=translation)
 
-
         # validate
         validate_set = get_dataloader(Corpus(validation_set=True, bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
-                                      token_limit=split_max_token, batch_size=batch_size)
+                                      token_limit=split_max_token, batch_size=batch_size, tokenizer=(en_tokenizer, vi_tokenizer))
         keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)
         val = validate(validate_set, model, criterion, device=device)
         print(f'EPOCH:{epoch+1}->{val}', file=vali)
