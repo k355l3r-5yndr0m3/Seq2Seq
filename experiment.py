@@ -28,7 +28,7 @@ new_vocab_size = 2**12
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = Seq2SeqTransformer(padding=padding, device=device, seperate_embedding=True, decople_token_decoder=True, embedding_dim=d_model,
-                           num_encoder_layers=8, dropout=0.1, vocab_size=new_vocab_size)
+                           num_encoder_layers=8, dropout=0.1, vocab_size=new_vocab_size, normalize_logit=False)
 
 
 en_tokenizer = sentencepiece_numericalizer(load_sp_model("en_unig.model"))
