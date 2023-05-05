@@ -20,7 +20,7 @@ num_checkpoints = 4
 
 d_model = 1024
 warmup_step = 4000
-split_max_token = 2**13
+split_max_token = 2**8
 batch_size = 512
 
 new_vocab_size = 2**12
