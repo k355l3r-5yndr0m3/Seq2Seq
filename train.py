@@ -64,7 +64,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
                 scheduler: optim.lr_scheduler.LRScheduler | None = None,
                 print_loss: bool = True, aggregate_over_nbatch: int = 1, return_losses: bool = False,
                 loss_take_arg: bool = False, exclaim_each_batch: bool = True, on_device: str = 'cpu',
-                write_loss_to=sys.stdout, write_batch_num=sys.stdout) -> None | list[float]:
+                write_loss_to=sys.stdout, write_batch_num=sys.stdout, switch: bool = False) -> None | list[float]:
     model.train()
     loss_scale_factor = 1.0 / aggregate_over_nbatch if loss_take_arg else 1.0
     loss_aggregate = 0.0
@@ -76,6 +76,8 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
         for src, tgt, factor in batch:
             src = src.to(device=on_device)
             tgt = tgt.to(device=on_device)
+            if switch:
+                src, tgt = tgt, src
 
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
             try:
@@ -102,7 +104,7 @@ def train_epoch(dataloader: DataLoader, model: nn.Module, optimizer: optim.Optim
     return losses
 
 
-def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, device: str = 'cpu') -> float:
+def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, device: str = 'cpu', switch: bool = False) -> float:
     model.eval()
     total = 0.0
     factor = 1.0 / len(dataloader)
@@ -110,6 +112,9 @@ def validate(dataloader: DataLoader, model: nn.Module, criterion: callable, devi
         for src, tgt, f in batch:
             src = src.to(device=device)
             tgt = tgt.to(device=device)
+            if switch:
+                src, tgt = tgt, src
+
             tgt_in, tgt_out = tgt[:, :-1], tgt[:, 1:]
             try:
                 logits = model(src=src, tgt=tgt_in)

@@ -60,19 +60,19 @@ with open("train_loss", "a", buffering=1) as graph, open("test_translation", "a"
         dataloader = get_dataloader(Corpus(bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
                                     token_limit=split_max_token, batch_size=batch_size, tokenizer=(en_tokenizer, vi_tokenizer))
         print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=graph)
-        train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=False, write_loss_to=graph)
+        train_epoch(dataloader, model, optimizer, criterion, scheduler, on_device=device, loss_take_arg=False, write_loss_to=graph, switch=True)
         print(f"{'='*32}\n", file=graph)
         del dataloader
         # translate some phrases
-        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
-        testing(model, device=device, write_result_to=translation, src_tokenizer=en_tokenizer, vocab=vi_vocab)
-        print(f"{'='*32}\n", file=translation)
+#        print(f"{'-'*8}{epoch+1}/{epoch_num}{'-'*8}", file=translation)
+#        testing(model, device=device, write_result_to=translation, src_tokenizer=en_tokenizer, vocab=vi_vocab)
+#        print(f"{'='*32}\n", file=translation)
 
         # validate
         validate_set = get_dataloader(Corpus(validation_set=True, bidirectional=False), starting_value=start, ending_value=end, padding_value=padding,
                                       token_limit=split_max_token, batch_size=batch_size, tokenizer=(en_tokenizer, vi_tokenizer))
         keep_n_checkpoints(model, optimizer, scheduler, keep_n=num_checkpoints)
-        val = validate(validate_set, model, criterion, device=device)
+        val = validate(validate_set, model, criterion, device=device, switch=True)
         print(f'EPOCH:{epoch+1}->{val}', file=vali)
         del validate_set
         if validate_best > val:  # saving best performer
